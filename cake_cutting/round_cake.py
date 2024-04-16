@@ -1,3 +1,5 @@
+from typing import Literal
+
 import matplotlib.pyplot as plt
 from matplotlib import patches, transforms
 from matplotlib.animation import FuncAnimation, PillowWriter
@@ -7,21 +9,35 @@ import numpy as np
 from axline import axline
 
 
+R = 1
+CENTER = (0, -0.35)
+
+
 # FIXME problem is now 2D if cut can be anywhere? long cake would be the same?
 # still 1D, fix cut to origin/center and rotate, candles can be anywhere in circle
 rng = np.random.default_rng(seed=123)
 
-sim_length = 10
+sim_length = 3
 
 
-def find_quadrant_rect(x, y):
-    raise NotImplementedError
+def find_quadrant_rect(x: float, y: float) -> Literal[1, 2, 3, 4]:
+    """Return Cartesian quadrant number for given x, y coordinates. 0 is positive."""
+    x = x - CENTER[0]
+    y = y - CENTER[1]
+
+    if x >= 0 and y >= 0:
+        return 1
+    if x < 0 and y >= 0:
+        return 2
+    if x < 0 and y < 0:
+        return 3
+    if x >= 0 and y < 0:
+        return 4
+
 
 #####################################################################
 ## Simple simulation
 #####################################################################
-R = 1
-CENTER = (0, -0.35)
 
 theta = rng.uniform(0, 2 * np.pi, (sim_length, 4))
 # Radius that candles will be placed at
@@ -33,7 +49,21 @@ y = radius * np.sin(theta[:, 0:3]) + CENTER[1]
 
 c1 = np.array([x[:, 0], y[:, 0]]).transpose()
 c2 = np.array([x[:, 1], y[:, 1]]).transpose()
-cut = np.array([x[:, 2], y[:, 2], theta[:, 3]]).transpose()
+# cut = np.array([x[:, 2], y[:, 2], theta[:, 3]]).transpose()  # cut anywhere, theta angle at point (x,y)
+cut = np.array([x[:, 2], y[:, 2]]).transpose()
+
+print(c1)
+print([find_quadrant_rect(x,y) for x,y in c1])
+print(c2)
+print([find_quadrant_rect(x,y) for x,y in c2])
+print(cut)
+print(np.array([find_quadrant_rect(x,y) for x,y in cut]).transpose())
+print(list(map(lambda x: (((x-1) + 2) % 4) + 1, [find_quadrant_rect(x,y) for x,y in cut])))
+
+cut = np.column_stack((cut, np.array([find_quadrant_rect(x,y) for x,y in cut]).transpose()))
+cut = np.column_stack((cut, list(map(lambda x: (((x-1) + 2) % 4) + 1, [find_quadrant_rect(x,y) for x,y,_ in cut]))))
+print(cut)
+
 
 new_length = 0.42
 new_cut = np.array(
@@ -62,8 +92,16 @@ ax.add_patch(patches.Circle(CENTER, radius, linewidth=20, edgecolor="b", facecol
 
 ## Text
 ax.text(-1.3, 1.2, 'Probability slice will separate the two candles', fontsize=20)
-trial_num = ax.text(-1.2, 0.9, 'Trial:', fontsize=18) #TODO remove 'Sample'
+trial_num = ax.text(-1.2, 0.9, 'Trial:', fontsize=18)
 success_rate = ax.text(0, 0.9, 'Success rate:', fontsize=20)
+
+for i in [c1, c2, cut]:
+    for idx, (x,y,*q) in enumerate(i):
+        ax.text(x, y, f"{idx} ({x:.2f},{y:.2f})", fontsize=12)
+ax.text(CENTER[0], CENTER[1], f"center ({CENTER[0]:.2f},{CENTER[1]:.2f})", fontsize=12)
+ax.text(0, 0, "(0,0)", fontsize=12)
+ax.vlines(CENTER[0], CENTER[1]-R, CENTER[1]+R, "lime", lw=6)
+ax.hlines(CENTER[1], CENTER[0]-R, CENTER[0]+R, "lime", lw=6)
 
 ax.scatter(c1[:, 0], c1[:, 1], s=500, marker=".", color="b")
 ax.scatter(c2[:, 0], c2[:, 1], s=500, marker=".", color="g")
