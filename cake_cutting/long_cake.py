@@ -12,16 +12,22 @@ import numpy.typing as npt
 RECT_SIZE = (0.8, 0.35)
 RECT_POSITION = (0.1, 0.25)
 
+
 def simple_simulation(rng: np.random.Generator, sim_length: int):
-    #####################################################################
-    ## Simple simulation
-    #####################################################################
+    """
+    Simulate trials of cutting a rectangular cake with two candles. Record results of splitting the candle pair.
+
+    Args:
+        rng (np.random.Generator): random number generator
+        sim_length (int): length of simulation, number of trials
+    """
     c1 = rng.random(sim_length)  # Equivalent to rng.uniform(0, 1, sim_length)
     c2 = rng.random(sim_length)
     cut = rng.random(sim_length)
 
     count = 0
     for i in range(sim_length):
+        # Is cut between candles?
         if ((c1[i] < cut[i]) and (cut[i] < c2[i])) or ((c2[i] < cut[i]) and (cut[i] < c1[i])):
             count += 1
     print(f"Successful slice rate: {count / sim_length}")
@@ -35,7 +41,7 @@ def animation_update(
     plot_cut: lines.Line2D,
     trial_num_text: text.Text,
     success_rate_text: text.Text,
-    sim_length: int
+    sim_length: int,
 ):
     """Update animation frame with new data from simulation."""
     plot_candle1.set_data([simulation["candle1"][frame_number]], [RECT_POSITION[1] + (RECT_SIZE[1] / 2)])
@@ -49,15 +55,31 @@ def animation_update(
     else:
         plot_cut.set_color("k")
 
-    trial_num_text.set_text(f"Trial: {frame_number}/{sim_length}")
+    trial_num_text.set_text(f"Trial: {frame_number+1}/{sim_length}")
     if frame_number != 0:
         success_rate_text.set_text(f"Success rate: {simulation['success'][:frame_number].mean() * 100:0.2f}%")
 
+    return [plot_candle1, plot_candle2, plot_cut, trial_num_text, success_rate_text]
 
-def simulation_animation(rng: np.random.Generator, sim_length: int, save_animation: bool = False):
-    #####################################################################
-    ## For animation plot
-    #####################################################################
+
+def simulation_animation(
+    rng: np.random.Generator,
+    sim_length: int,
+    show_candle_region: bool = False,
+    save_animation: bool = False,
+    save_filename: Path = Path(os.getcwd()).joinpath("long_cake.gif"),
+):
+    """
+    Animate plots of simulation results, giving updated results as trials complete.
+
+    Args:
+        rng (np.random.Generator): random number generator
+        sim_length (int): length of simulation, number of trials
+        show_candle_region (bool, optional): Display region where candles are placed. Defaults to False.
+        save_animation (bool, optional): Save animation to file as GIF. Defaults to False.
+        save_filename (Path, optional): Path to save animation.
+            Defaults to Path(os.getcwd()).joinpath("long cake.gif").
+    """
     sim = np.zeros(
         sim_length,
         dtype=[
@@ -68,7 +90,6 @@ def simulation_animation(rng: np.random.Generator, sim_length: int, save_animati
         ]
     )
 
-    # High/low range is to fit within the animation display
     sim["candle1"] = rng.uniform(RECT_POSITION[0], RECT_POSITION[0] + RECT_SIZE[0], sim_length)
     sim["candle2"] = rng.uniform(RECT_POSITION[0], RECT_POSITION[0] + RECT_SIZE[0], sim_length)
     sim["cut"] = rng.uniform(RECT_POSITION[0], RECT_POSITION[0] + RECT_SIZE[0], sim_length)
@@ -77,7 +98,6 @@ def simulation_animation(rng: np.random.Generator, sim_length: int, save_animati
         | (sim["candle2"] < sim["cut"]) & (sim["cut"] < sim["candle1"])
     )
     print(f'Successful slice rate: {np.average(sim["success"])}')
-
 
     ## Create new Figure and an Axes which fills it.
     fig = plt.figure(figsize=(7, 7))
@@ -88,13 +108,20 @@ def simulation_animation(rng: np.random.Generator, sim_length: int, save_animati
     ax.set_yticks([])
 
     ## Background "boundaries"
-    rect = patches.Rectangle(RECT_POSITION, RECT_SIZE[0], RECT_SIZE[1], linewidth=1, edgecolor="k", facecolor="none")
-    ax.add_patch(rect)
-    ax.add_patch(patches.Rectangle(
-        (RECT_POSITION[0], RECT_POSITION[1] + (RECT_SIZE[1] / 2)),
-        RECT_SIZE[0], 0,
-        linewidth=20, edgecolor="b", facecolor="none", alpha=0.25
-    ))
+    ax.add_patch(
+        patches.Rectangle(RECT_POSITION, RECT_SIZE[0], RECT_SIZE[1], linewidth=1, edgecolor="k", facecolor="none")
+    )
+    if show_candle_region:
+        ax.add_patch(
+            patches.Rectangle(
+                (RECT_POSITION[0], RECT_POSITION[1] + (RECT_SIZE[1] / 2)),  # (x, y)
+                RECT_SIZE[0], 0,  # w, h
+                linewidth=20,
+                edgecolor="b",
+                facecolor="none",
+                alpha=0.25,
+            )
+        )
 
     ## Sim values
     candle1_plot = ax.plot(sim["candle1"][0], RECT_POSITION[1] + (RECT_SIZE[1] / 2), "b.", markersize=20)[0]
@@ -103,8 +130,8 @@ def simulation_animation(rng: np.random.Generator, sim_length: int, save_animati
 
     ## Text
     ax.text(0.05, 0.9, "Probability slice will separate the two candles", fontsize=20)
-    trial_num = ax.text(0.05, 0.8, "", fontsize=18)
-    success_rate = ax.text(0.5, 0.8, "", fontsize=20)
+    trial_num = ax.text(0.1, 0.8, "Trial:", fontsize=18)
+    success_rate = ax.text(0.5, 0.8, "Success rate:", fontsize=20)
 
     ## Construct the animation, using the update function as the animation director.
     animation = FuncAnimation(
@@ -117,24 +144,32 @@ def simulation_animation(rng: np.random.Generator, sim_length: int, save_animati
             plot_cut=cut_plot,
             trial_num_text=trial_num,
             success_rate_text=success_rate,
-            sim_length=sim_length
+            sim_length=sim_length,
         ),
         frames=sim_length,
         interval=100,
         repeat=False,
+        blit=True,
     )
     if save_animation:
-        animation.save(Path(os.getcwd()).joinpath("long cake.gif"), writer=PillowWriter(fps=10))
+        animation.save(save_filename, writer=PillowWriter(fps=10))
 
     plt.show()
     plt.close("all")
 
+
 if __name__ == "__main__":
-    rng = np.random.default_rng(seed=None)
-    sim_length = 10000
-    save_animation = False
+    rng_main = np.random.default_rng(seed=None)
+    sim_length_main = 10000
+    save_animation_main = False
 
     print("The probability a slice will separate the two candles:")
 
-    simple_simulation(rng, sim_length)
-    simulation_animation(rng, sim_length, save_animation)
+    simple_simulation(rng_main, sim_length_main)
+    simulation_animation(
+        rng_main,
+        sim_length_main,
+        show_candle_region=False,
+        save_animation=save_animation_main,
+        save_filename=Path("./cake_cutting/long_cake.gif"),
+    )
