@@ -9,13 +9,15 @@ import numpy as np
 import numpy.typing as npt
 
 
-RECT_SIZE = (0.8, 0.35)
-RECT_POSITION = (0.1, 0.25)
+RECT_SIZE: "tuple[float, float]" = (0.8, 0.35)
+RECT_POSITION: "tuple[float, float]" = (0.1, 0.25)
 
 
 def simple_simulation(rng: np.random.Generator, sim_length: int):
     """
     Simulate trials of cutting a rectangular cake with two candles. Record results of splitting the candle pair.
+
+    Candles split cake into 3 regions, slice chooses one of the regions. P(slice between candles) = 1/3.
 
     Args:
         rng (np.random.Generator): random number generator
@@ -164,6 +166,7 @@ if __name__ == "__main__":
     save_animation_main = False
 
     print("The probability a slice will separate the two candles:")
+    print(f"Simulation: {sim_length_main} trials.")
 
     simple_simulation(rng_main, sim_length_main)
     simulation_animation(

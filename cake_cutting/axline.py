@@ -1,18 +1,20 @@
+from typing import Optional
+
 from matplotlib.transforms import Bbox, BboxTransformTo
 from matplotlib.lines import Line2D
 from matplotlib.axes import Axes
 import numpy as np
 
 def axline(
-    ax: Axes, xy1: tuple[float, float], xy2: tuple[float, float] = None, *,
-    slope: float | None = None, semi_x: bool = None, segment: bool = None, **kwargs
+    ax: Axes, xy1: "tuple[float, float]", xy2: "tuple[float, float]" = None, *,
+    slope: Optional[float] = None, semi_x: bool = None, segment: bool = None, **kwargs
 ):
     """
-    Custom axline function. Adds option for controlling which x-halfplane
+    Custom axline function. Adds option for controlling which x-half-plane
     around the xy1 point to draw.
 
-    semi_x=True uses the halfplane greater than xy1 (positive x direction),
-        semi_x=False uses the halfplane less than xy1 (negative x direction)
+    semi_x=True uses the half-plane greater than xy1 (positive x direction),
+        semi_x=False uses the half-plane less than xy1 (negative x direction)
 
     Ignoring semi_x (semi_x=None) preserves the default axline behavior.
     
@@ -108,7 +110,7 @@ class _AxLine(Line2D):
         self._slope = slope
         self._xy1 = xy1
         self._xy2 = xy2
-        self._semi_x = semi_x  # handle semi-plane
+        self._semi_x = semi_x  # handle half-plane
         self._segment = segment
 
     def get_transform(self):
@@ -149,7 +151,7 @@ class _AxLine(Line2D):
                 (x1 + (vylo - y1) / slope, vylo),
                 (x1 + (vyhi - y1) / slope, vyhi),
             ])
-        # Handle semi-plane
+        # Handle half-plane
         if self._semi_x:
             start = (x1, y1)
         elif self._semi_x is False:
@@ -237,7 +239,7 @@ def example():
         ],
         figsize=(12, 8),
     )
-    fig.suptitle("axline semiplanes and segments")
+    fig.suptitle("axline half-planes and segments")
 
     ax: Axes
     ax = ax_dict["slope no semi"]
