@@ -80,7 +80,7 @@ def simulation_animation(
         show_candle_region (bool, optional): Display region where candles are placed. Defaults to False.
         save_animation (bool, optional): Save animation to file as GIF. Defaults to False.
         save_filename (Path, optional): Path to save animation.
-            Defaults to Path(os.getcwd()).joinpath("long_cake.gif").
+            Defaults to Path(os.getcwd()).joinpath("long cake.gif").
     """
     sim = np.zeros(
         sim_length,
@@ -110,11 +110,9 @@ def simulation_animation(
     ax.set_yticks([])
 
     ## Background "boundaries"
-    # Cake outline
     ax.add_patch(
         patches.Rectangle(RECT_POSITION, RECT_SIZE[0], RECT_SIZE[1], linewidth=1, edgecolor="k", facecolor="none")
     )
-    # Candle placement path
     if show_candle_region:
         ax.add_patch(
             patches.Rectangle(
@@ -127,15 +125,15 @@ def simulation_animation(
             )
         )
 
-    ## Text
-    ax.text(0.05, 0.9, "Probability slice will separate the two candles", fontsize=20)
-    trial_num = ax.text(0.1, 0.8, "Trial:", fontsize=18)
-    success_rate = ax.text(0.5, 0.8, "Success rate:", fontsize=20)
-
     ## Sim values
     candle1_plot = ax.plot(sim["candle1"][0], RECT_POSITION[1] + (RECT_SIZE[1] / 2), "b.", markersize=20)[0]
     candle2_plot = ax.plot(sim["candle2"][0], RECT_POSITION[1] + (RECT_SIZE[1] / 2), "g.", markersize=20)[0]
     cut_plot = ax.plot([], [], linewidth=3, color="k")[0]
+
+    ## Text
+    ax.text(0.05, 0.9, "Probability slice will separate the two candles", fontsize=20)
+    trial_num = ax.text(0.1, 0.8, "Trial:", fontsize=18)
+    success_rate = ax.text(0.5, 0.8, "Success rate:", fontsize=20)
 
     ## Construct the animation, using the update function as the animation director.
     animation = FuncAnimation(
@@ -176,5 +174,5 @@ if __name__ == "__main__":
         sim_length_main,
         show_candle_region=False,
         save_animation=save_animation_main,
-        save_filename=Path("./cake_cutting/long_cake.gif"),
+        save_filename=Path("./cake_cutting/result_animations/long_cake.gif"),
     )
