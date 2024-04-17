@@ -13,7 +13,7 @@ RECT_SIZE: "tuple[float, float]" = (0.8, 0.35)
 RECT_POSITION: "tuple[float, float]" = (0.1, 0.25)
 
 
-def simple_simulation(rng: np.random.Generator, sim_length: int):
+def simple_simulation(rng: np.random.Generator, sim_length: int) -> None:
     """
     Simulate trials of cutting a rectangular cake with two candles. Record results of splitting the candle pair.
 
@@ -44,7 +44,7 @@ def animation_update(
     trial_num_text: text.Text,
     success_rate_text: text.Text,
     sim_length: int,
-):
+) -> list:
     """Update animation frame with new data from simulation."""
     plot_candle1.set_data([simulation["candle1"][frame_number]], [RECT_POSITION[1] + (RECT_SIZE[1] / 2)])
     plot_candle2.set_data([simulation["candle2"][frame_number]], [RECT_POSITION[1] + (RECT_SIZE[1] / 2)])
@@ -70,7 +70,7 @@ def simulation_animation(
     show_candle_region: bool = False,
     save_animation: bool = False,
     save_filename: Path = Path(os.getcwd()).joinpath("long_cake.gif"),
-):
+) -> None:
     """
     Animate plots of simulation results, giving updated results as trials complete.
 

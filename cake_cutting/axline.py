@@ -5,6 +5,7 @@ from matplotlib.lines import Line2D
 from matplotlib.axes import Axes
 import numpy as np
 
+
 def axline(
     ax: Axes, xy1: "tuple[float, float]", xy2: "tuple[float, float]" = None, *,
     slope: Optional[float] = None, semi_x: bool = None, segment: bool = None, **kwargs
