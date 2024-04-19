@@ -174,5 +174,5 @@ if __name__ == "__main__":
         sim_length_main,
         show_candle_region=False,
         save_animation=save_animation_main,
-        save_filename=Path("./cake_cutting/long_cake.gif"),
+        save_filename=Path("./cake_cutting/result_animations/long_cake.gif"),
     )
