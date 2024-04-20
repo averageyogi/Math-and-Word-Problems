@@ -11,6 +11,8 @@ import numpy.typing as npt
 
 RECT_SIZE: "tuple[float, float]" = (0.8, 0.35)
 RECT_POSITION: "tuple[float, float]" = (0.1, 0.25)
+SUCCESS_COLOR: str = "darkorange"
+FAILURE_COLOR: str = "k"
 
 
 def simple_simulation(rng: np.random.Generator, sim_length: int) -> None:
@@ -53,9 +55,9 @@ def animation_update(
         [RECT_POSITION[1] - 0.05, RECT_POSITION[1] + RECT_SIZE[1] + 0.05]
     )
     if simulation["success"][frame_number]:
-        plot_cut.set_color("r")
+        plot_cut.set_color(SUCCESS_COLOR)
     else:
-        plot_cut.set_color("k")
+        plot_cut.set_color(FAILURE_COLOR)
 
     trial_num_text.set_text(f"Trial: {frame_number+1}/{sim_length}")
     if frame_number != 0:
@@ -88,7 +90,7 @@ def simulation_animation(
             ("candle1", float),
             ("candle2", float),
             ("cut", float),
-            ("success", bool)
+            ("success", bool),
         ]
     )
 
@@ -109,10 +111,18 @@ def simulation_animation(
     ax.set_xticks([])
     ax.set_yticks([])
 
+    ## Text
+    ax.text(0.05, 0.9, "Probability slice will separate the two candles", fontsize=20)
+    trial_num = ax.text(0.1, 0.8, "Trial:", fontsize=18)
+    success_rate = ax.text(0.5, 0.8, "Success rate:", fontsize=20)
+
     ## Background "boundaries"
+    # Cake outline
     ax.add_patch(
         patches.Rectangle(RECT_POSITION, RECT_SIZE[0], RECT_SIZE[1], linewidth=1, edgecolor="k", facecolor="none")
     )
+    # Candle placement path
+    candle_region_legend = patches.Patch(fill=False, edgecolor="w", label=None)
     if show_candle_region:
         ax.add_patch(
             patches.Rectangle(
@@ -124,16 +134,28 @@ def simulation_animation(
                 alpha=0.25,
             )
         )
+        candle_region_legend = patches.Patch(edgecolor="b", linewidth=9, alpha=0.25, fill=False, label="Candle region")
+
 
     ## Sim values
     candle1_plot = ax.plot(sim["candle1"][0], RECT_POSITION[1] + (RECT_SIZE[1] / 2), "b.", markersize=20)[0]
     candle2_plot = ax.plot(sim["candle2"][0], RECT_POSITION[1] + (RECT_SIZE[1] / 2), "g.", markersize=20)[0]
-    cut_plot = ax.plot([], [], linewidth=3, color="k")[0]
+    cut_plot = ax.plot(
+        [sim["cut"][0], sim["cut"][0]],
+        [RECT_POSITION[1] - 0.05, RECT_POSITION[1] + RECT_SIZE[1] + 0.05],
+        linewidth=3,
+        color=SUCCESS_COLOR if sim["success"][0] else FAILURE_COLOR,
+    )[0]
 
-    ## Text
-    ax.text(0.05, 0.9, "Probability slice will separate the two candles", fontsize=20)
-    trial_num = ax.text(0.1, 0.8, "Trial:", fontsize=18)
-    success_rate = ax.text(0.5, 0.8, "Success rate:", fontsize=20)
+    success_legend = lines.Line2D([], [], color=SUCCESS_COLOR, linewidth=3, label="Success")
+    failure_legend = lines.Line2D([], [], color=FAILURE_COLOR, linewidth=3, label="Failure")
+    ax.legend(
+        handles=[success_legend, failure_legend, candle_region_legend],
+        loc="lower right",
+        fontsize=12,
+        frameon=False,
+        borderpad=0.8,
+    )
 
     ## Construct the animation, using the update function as the animation director.
     animation = FuncAnimation(
@@ -162,7 +184,7 @@ def simulation_animation(
 
 if __name__ == "__main__":
     rng_main = np.random.default_rng(seed=None)
-    sim_length_main = 10000
+    sim_length_main = 500
     save_animation_main = False
 
     print("The probability a slice will separate the two candles:")
@@ -172,7 +194,7 @@ if __name__ == "__main__":
     simulation_animation(
         rng_main,
         sim_length_main,
-        show_candle_region=False,
+        show_candle_region=True,
         save_animation=save_animation_main,
         save_filename=Path("./cake_cutting/result_animations/long_cake.gif"),
     )

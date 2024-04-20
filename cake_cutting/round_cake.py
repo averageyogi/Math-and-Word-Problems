@@ -13,8 +13,10 @@ from axline import axline
 
 
 R: float = 1
-CENTER: "tuple[float, float]" = (0, -0.35)
+CENTER: "tuple[float, float]" = (-0.1, -0.35)
 CUT_DISPLAY_R: float = 0.42
+SUCCESS_COLOR: str = "darkorange"
+FAILURE_COLOR: str = "k"
 
 
 def find_quadrant_rect(x: float, y: float) -> Literal[1, 2, 3, 4]:
@@ -131,9 +133,9 @@ def animation_update(
         [simulation["cut"][frame_number, 1], CENTER[1] * 2 - simulation["cut"][frame_number, 1]],  # [y, y reflected]
     )
     if simulation["success"][frame_number, 0]:
-        plot_cut.set_color("r")
+        plot_cut.set_color(SUCCESS_COLOR)
     else:
-        plot_cut.set_color("k")
+        plot_cut.set_color(FAILURE_COLOR)
 
     trial_num_text.set_text(f"Trial: {frame_number+1}/{sim_length}")
     if frame_number != 0:
@@ -216,14 +218,17 @@ def simulation_animation(
     ax.set_xticks([])
     ax.set_yticks([])
 
-    ## Background "boundaries"
-    # Cake outline
-    ax.add_patch(patches.Circle(CENTER, R, linewidth=1, edgecolor="k", facecolor="none"))
-    # Candle placement path
-    if show_candle_region:
-        ax.add_patch(patches.Circle(CENTER, radius, linewidth=20, edgecolor="b", facecolor="none", alpha=0.25))
-        # ax.add_patch(patches.Circle(CENTER, radius+0.05, linewidth=1, edgecolor="b", facecolor="none"))
-        # ax.add_patch(patches.Circle(CENTER, radius-0.05, linewidth=1, edgecolor="b", facecolor="none"))
+    # Testing plot
+    testing = False
+    if testing:
+        if sim_length < 10:
+            for i in [sim["candle1"], sim["candle2"], sim["cut"]]:
+                for idx, (x, y, *q) in enumerate(i):
+                    ax.text(x, y, f"{idx} ({x:.2f},{y:.2f})", fontsize=12)
+        ax.text(CENTER[0], CENTER[1], f"center ({CENTER[0]:.2f},{CENTER[1]:.2f})", fontsize=12)
+        ax.text(0, 0, "(0,0)", fontsize=12)
+        ax.vlines(CENTER[0], CENTER[1] - R, CENTER[1] + R, "lime", lw=6)
+        ax.hlines(CENTER[1], CENTER[0] - R, CENTER[0] + R, "lime", lw=6)
 
     ## Text
     ax.text(
@@ -238,22 +243,34 @@ def simulation_animation(
     trial_num = ax.text(-1.2, 0.9, "Trial:", fontsize=18)
     success_rate = ax.text(0, 0.9, "Success rate:", fontsize=20)
 
-    # Testing plot
-    testing = False
-    if testing:
-        if sim_length < 10:
-            for i in [sim["candle1"], sim["candle2"], sim["cut"]]:
-                for idx, (x, y, *q) in enumerate(i):
-                    ax.text(x, y, f"{idx} ({x:.2f},{y:.2f})", fontsize=12)
-        ax.text(CENTER[0], CENTER[1], f"center ({CENTER[0]:.2f},{CENTER[1]:.2f})", fontsize=12)
-        ax.text(0, 0, "(0,0)", fontsize=12)
-        ax.vlines(CENTER[0], CENTER[1] - R, CENTER[1] + R, "lime", lw=6)
-        ax.hlines(CENTER[1], CENTER[0] - R, CENTER[0] + R, "lime", lw=6)
+    ## Background "boundaries"
+    # Cake outline
+    ax.add_patch(patches.Circle(CENTER, R, linewidth=1, edgecolor="k", facecolor="none"))
+    # Candle placement path
+    candle_region_legend = patches.Patch(fill=False, edgecolor="w", label=None)
+    if show_candle_region:
+        ax.add_patch(patches.Circle(CENTER, radius, linewidth=20, edgecolor="b", facecolor="none", alpha=0.25))
+        candle_region_legend = patches.Patch(edgecolor="b", linewidth=9, alpha=0.25, fill=False, label="Candle region")
 
     ## Sim values
     candle1_plot = ax.plot(sim["candle1"][0, 0], sim["candle1"][0, 1], "b.", markersize=20)[0]
     candle2_plot = ax.plot(sim["candle2"][0, 0], sim["candle1"][0, 1], "g.", markersize=20)[0]
-    cut_plot = ax.plot([], [], linewidth=3, color="k")[0]
+    cut_plot = ax.plot(
+        [sim["cut"][0, 0], CENTER[0] * 2 - sim["cut"][0, 0]],  # [x, x reflected]
+        [sim["cut"][0, 1], CENTER[1] * 2 - sim["cut"][0, 1]],  # [y, y reflected]
+        linewidth=3,
+        color=SUCCESS_COLOR if sim["success"][0, 0] else FAILURE_COLOR,
+    )[0]
+
+    success_legend = lines.Line2D([], [], color=SUCCESS_COLOR, linewidth=3, label="Success")
+    failure_legend = lines.Line2D([], [], color=FAILURE_COLOR, linewidth=3, label="Failure")
+    ax.legend(
+        handles=[success_legend, failure_legend, candle_region_legend],
+        loc="lower right",
+        fontsize=12,
+        frameon=False,
+        borderpad=0.8,
+    )
 
     # ax.scatter(sim["candle1"][:, 0], sim["candle1"][:, 1], s=500, marker=".", color="b")
     # ax.scatter(sim["candle2"][:, 0], sim["candle2"][:, 1], s=500, marker=".", color="g")
@@ -311,7 +328,7 @@ if __name__ == "__main__":
     simulation_animation(
         rng_main,
         sim_length_main,
-        show_candle_region=False,
+        show_candle_region=True,
         save_animation=save_animation_main,
         save_filename=Path("./cake_cutting/result_animations/round_cake_cut_from_center.gif"),
     )
