@@ -8,11 +8,7 @@ from matplotlib import patches, lines, text
 from matplotlib.animation import FuncAnimation, PillowWriter
 import numpy as np
 import numpy.typing as npt
-
-import shapely
-import shapely.affinity
-from shapely.geometry import LineString as sLineString
-from shapely.geometry import Point as sPoint
+from shapely.geometry import LineString as sLineString, Point as sPoint
 
 from axline import axline
 
@@ -169,7 +165,11 @@ def simulation_animation_cut_through_center(
     """
     Animate plots of simulation results, giving updated results as trials complete.
 
-    Currently only case 1: cutting through the center of the cake, is implemented.
+    In the simple case going through the center, changing radius doesn't matter.
+    One point is fixed, and the other point is on the same line no matter the distance away.
+    It only matters when displaying the results.
+
+    Slice splits cake in half, P(one candle is on each half) = 2/4 = 1/2.
 
     Args:
         rng (np.random.Generator): random number generator
@@ -233,17 +233,35 @@ def simulation_animation_cut_through_center(
     ax.set_xticks([])
     ax.set_yticks([])
 
-    # Testing plot
-    testing = False
-    if testing:
-        if sim_length < 10:
-            for i in [sim["candle1"], sim["candle2"], sim["cut"]]:
-                for idx, (x, y, *q) in enumerate(i):
-                    ax.text(x, y, f"{idx} ({x:.2f},{y:.2f})", fontsize=12)
-        ax.text(CENTER[0], CENTER[1], f"center ({CENTER[0]:.2f},{CENTER[1]:.2f})", fontsize=12)
-        ax.text(0, 0, "(0,0)", fontsize=12)
-        ax.vlines(CENTER[0], CENTER[1] - R, CENTER[1] + R, "lime", lw=6)
-        ax.hlines(CENTER[1], CENTER[0] - R, CENTER[0] + R, "lime", lw=6)
+    # # Testing plot
+    # testing = False
+    # if testing:
+    #     if sim_length < 10:
+    #         for i in [sim["candle1"], sim["candle2"], sim["cut"]]:
+    #             for idx, (x, y, *q) in enumerate(i):
+    #                 ax.text(x, y, f"{idx} ({x:.2f},{y:.2f})", fontsize=12)
+    #     ax.text(CENTER[0], CENTER[1], f"center ({CENTER[0]:.2f},{CENTER[1]:.2f})", fontsize=12)
+    #     ax.text(0, 0, "(0,0)", fontsize=12)
+    #     ax.vlines(CENTER[0], CENTER[1] - R, CENTER[1] + R, "lime", lw=6)
+    #     ax.hlines(CENTER[1], CENTER[0] - R, CENTER[0] + R, "lime", lw=6)
+    # ax.scatter(sim["candle1"][:, 0], sim["candle1"][:, 1], s=500, marker=".", color="b")
+    # ax.scatter(sim["candle2"][:, 0], sim["candle2"][:, 1], s=500, marker=".", color="g")
+    # for i in range(sim_length):
+    #     cut_plot1 = ax.plot(
+    #         [sim['cut'][i, 0], CENTER[0] * 2 - sim['cut'][i, 0]],
+    #         [sim['cut'][i, 1], CENTER[1] * 2 - sim['cut'][i, 1]],
+    #         linewidth=3, color="k"
+    #     )[0]
+    #     ## ax.axline((cut[i, 0], cut[i, 1]), slope=cut[i, 2], color="red")  # cut anywhere?
+    #     axline(  #TODO do I really actually need this
+    #         ax,
+    #         xy1=(sim['cut'][i, 0], sim['cut'][i, 1]),
+    #         xy2=(CENTER[0] * 2 - sim['cut'][i, 0], CENTER[1] * 2 - sim['cut'][i, 1]),  # point reflection
+    #         # xy2=CENTER,
+    #         segment=True,
+    #         color="r"
+    #     )  # cut through center
+    # # plt.show()
 
     ## Text
     ax.text(
@@ -288,25 +306,6 @@ def simulation_animation_cut_through_center(
         borderpad=0.8,
     )
 
-    # ax.scatter(sim["candle1"][:, 0], sim["candle1"][:, 1], s=500, marker=".", color="b")
-    # ax.scatter(sim["candle2"][:, 0], sim["candle2"][:, 1], s=500, marker=".", color="g")
-    # for i in range(sim_length):
-    #     cut_plot1 = ax.plot(
-    #         [sim['cut'][i, 0], CENTER[0] * 2 - sim['cut'][i, 0]],
-    #         [sim['cut'][i, 1], CENTER[1] * 2 - sim['cut'][i, 1]],
-    #         linewidth=3, color="k"
-    #     )[0]
-    #     ## ax.axline((cut[i, 0], cut[i, 1]), slope=cut[i, 2], color="red")  # cut anywhere?
-    #     axline(  #TODO do I really actually need this
-    #         ax,
-    #         xy1=(sim['cut'][i, 0], sim['cut'][i, 1]),
-    #         xy2=(CENTER[0] * 2 - sim['cut'][i, 0], CENTER[1] * 2 - sim['cut'][i, 1]),  # point reflection
-    #         # xy2=CENTER,
-    #         segment=True,
-    #         color="r"
-    #     )  # cut through center
-    # # plt.show()
-
     ## Construct the animation, using the update function as the animation director.
     animation = FuncAnimation(
         fig,
@@ -334,6 +333,7 @@ def simulation_animation_cut_through_center(
 def simulation_animation_cut_anywhere(
     rng: np.random.Generator,
     sim_length: int,
+    radius: float = None,
     show_candle_region: bool = False,
     save_animation: bool = False,
     save_filename: Path = Path(os.getcwd()).joinpath("round_cake.gif"),
@@ -341,11 +341,19 @@ def simulation_animation_cut_anywhere(
     """
     Animate plots of simulation results, giving updated results as trials complete.
 
-    Currently only case 1: cutting through the center of the cake, is implemented.
+    In the cut anywhere case, changing radius and center does seem to matter.
+    With fixed radius, all points are on a circle. Cut is 2 points on circle,
+    those points can either be together between the candles (2 options (4 bi-directionally)),
+    or have one candle in between each cut point (1 option (2 bi-directionally)).
+    P(cut points are each between candles) = 2/6 = 1/3.
+
+    With random radius between 0-R, it appears to be around 0.38.
 
     Args:
         rng (np.random.Generator): random number generator
         sim_length (int): length of simulation, number of trials
+        radius (float, optional): Radius value from where random candle and cut points will be generated from.
+            If omitted, candles and cut will be placed randomly across entire cake. Defaults to None.
         show_candle_region (bool, optional): Display region where candles are placed. Defaults to False.
         save_animation (bool, optional): Save animation to file as GIF. Defaults to False.
         save_filename (Path, optional): Path to save animation.
@@ -375,22 +383,21 @@ def simulation_animation_cut_anywhere(
     ## Angle/position around the cake candles will be placed at
     theta = rng.uniform(0, 2 * np.pi, (sim_length, 5))
     ## Random radius from center that candles will be placed at
-    radius = R * 0.65  # fixed radius
-    # radius = rng.uniform(0, R, (sim_length, 4)) ** 0.5  # random position for all points
+    if radius is None:
+        # radius = R * 0.65  # fixed radius
+        radius = rng.uniform(0, R, (sim_length, 4)) ** 0.5  # random position for all points
 
     x = radius * np.cos(theta[:, 0:4]) + CENTER[0]
     y = radius * np.sin(theta[:, 0:4]) + CENTER[1]
 
     sim["candle1"] = np.array([x[:, 0], y[:, 0]]).transpose()
     sim["candle2"] = np.array([x[:, 1], y[:, 1]]).transpose()
-    # sim["cut"] = np.array([x[:, 2], y[:, 2]]).transpose()  # cut always goes through center and point (x2, y2)
     # Cut anywhere, through point (x2, y2) and (x3, y3)
     cut = np.array([x[:, 2], y[:, 2], x[:, 3], y[:, 3]]).transpose()
-    # sim["cut"] = np.hstack((cut))
 
     def extend_lines(cut):
         def getExtrapolatedLine(p1, p2, extrapolate_ratio = sim_length):
-            """Creates a line extrapolated in p1->p2 direction"""
+            """Creates a line extrapolated in both directions"""
             a = p1
             b = (
                 p1[0] + extrapolate_ratio * (p2[0] - p1[0]),
@@ -417,23 +424,26 @@ def simulation_animation_cut_anywhere(
         # ax.plot(long_line_arr[:,0], long_line_arr[:,1], color="lime", linewidth=5)
         intersect = c.intersection(long_line)
         # print(i)
-        # if i:
-        #FIXME i.geoms errors out sometimes, i has no points or only one point instead of two
-        # increasing extrapolate_ratio seems to help, but not sure why it should, or why it has to be so large
-        intersection_arr = np.hstack((np.array(intersect.geoms[0].coords[0]), np.array(intersect.geoms[1].coords[0])))
-        # else:
-        #     intersection_arr = np.zeros(4)
+        # #FIXME i.geoms errors out sometimes, i has no points or only one point instead of two
+        # # increasing extrapolate_ratio seems to help, but not sure why it should, or why it has to be so large
+        try:
+            intersection_arr = np.hstack((
+                np.array(intersect.geoms[0].coords[0]),
+                np.array(intersect.geoms[1].coords[0]),
+            ))
+        except AttributeError:
+            print(
+                "\033[33mNo intersection between slice and cake edge found in iteration. "
+                "Recommend rerunning simulation.\033[0m"
+            )
+            intersection_arr = np.zeros(4)
         # ax.plot(intersection_arr[0], intersection_arr[2], "y.", markersize=30)
         # ax.plot(intersection_arr[1], intersection_arr[3], "y.", markersize=30)
         # plt.show()
 
         return intersection_arr
 
-    # print('cut[0]', cut[0])
-    # print('inters', intersection_arr)
-    # vfunc = np.vectorize(extend_lines)(cut)
     cut = np.array([extend_lines(x) for x in cut])
-    # print(cut22)
 
     # a circle exterior to R, extend cut to intersect with exterior circle?
     # ax.add_patch(patches.Circle(CENTER, R*1.07, linewidth=1, edgecolor="r", facecolor="none"))
@@ -467,7 +477,12 @@ def simulation_animation_cut_anywhere(
     ))
 
     sim["success"] = np.array([side_of_cut_c1 != side_of_cut_c2, np.zeros(sim_length)]).transpose()
-    print("Successful slice rate (cut anywhere, fixed radius): ", np.average(sim["success"][:, 0]))
+    if isinstance(radius, float):
+        print("Successful slice rate (cut anywhere, fixed radius): ", np.average(sim["success"][:, 0]))
+    else:
+        print(
+            "Successful slice rate (cut anywhere, random position for all points): ", np.average(sim["success"][:, 0])
+        )
 
     # # Testing plot
     # testing = True
@@ -480,50 +495,6 @@ def simulation_animation_cut_anywhere(
     #     ax.text(0, 0, "(0,0)", fontsize=12)
     #     ax.vlines(CENTER[0], CENTER[1] - R, CENTER[1] + R, "lime", lw=6)
     #     ax.hlines(CENTER[1], CENTER[0] - R, CENTER[0] + R, "lime", lw=6)
-
-    ## Text
-    ax.text(
-        0, 1.1,
-        (
-            "Probability slice will separate the two candles\n"
-            "Cutting anywhere, fixed radius"
-        ),
-        horizontalalignment="center",
-        fontsize=20,
-    )
-    trial_num = ax.text(-1.2, 0.9, "Trial:", fontsize=18)
-    success_rate = ax.text(0, 0.9, "Success rate:", fontsize=20)
-
-    ## Background "boundaries"
-    # Cake outline
-    ax.add_patch(patches.Circle(CENTER, R, linewidth=1, edgecolor="k", facecolor="none"))
-    # ax.add_patch(patches.Circle(CENTER, R*1.07, linewidth=1, edgecolor="r", facecolor="none"))
-    # Candle placement path
-    candle_region_legend = patches.Patch(fill=False, edgecolor="w", label=None)
-    if show_candle_region:
-        ax.add_patch(patches.Circle(CENTER, radius, linewidth=20, edgecolor="b", facecolor="none", alpha=0.25))
-        candle_region_legend = patches.Patch(edgecolor="b", linewidth=9, alpha=0.25, fill=False, label="Candle region")
-
-    ## Sim values
-    candle1_plot = ax.plot(sim["candle1"][0, 0], sim["candle1"][0, 1], "b.", markersize=20)[0]
-    candle2_plot = ax.plot(sim["candle2"][0, 0], sim["candle2"][0, 1], "g.", markersize=20)[0]
-    cut_plot = ax.plot(
-        [cut[0, 0], cut[0, 2]],  # [x, x reflected]
-        [cut[0, 1], cut[0, 3]],  # [y, y reflected]
-        linewidth=3,
-        color=SUCCESS_COLOR if sim["success"][0, 0] else FAILURE_COLOR,
-    )[0]
-
-    success_legend = lines.Line2D([], [], color=SUCCESS_COLOR, linewidth=3, label="Success")
-    failure_legend = lines.Line2D([], [], color=FAILURE_COLOR, linewidth=3, label="Failure")
-    ax.legend(
-        handles=[success_legend, failure_legend, candle_region_legend],
-        loc="lower right",
-        fontsize=12,
-        frameon=False,
-        borderpad=0.8,
-    )
-
     # ax.scatter(sim["candle1"][:, 0], sim["candle1"][:, 1], s=500, marker=".", color="b")
     # ax.scatter(sim["candle2"][:, 0], sim["candle2"][:, 1], s=500, marker=".", color="g")
     # for i in range(sim_length):
@@ -551,6 +522,63 @@ def simulation_animation_cut_anywhere(
     #     #     color="r"
     #     # )  # cut through center
     # plt.show()
+
+    ## Text
+    if isinstance(radius, float):
+        ax.text(
+            0, 1.1,
+            (
+                "Probability slice will separate the two candles\n"
+                "Cutting anywhere, fixed radius"
+            ),
+            horizontalalignment="center",
+            fontsize=20,
+        )
+    else:
+        ax.text(
+            0, 1.1,
+            (
+                "Probability slice will separate the two candles\n"
+                "Cutting anywhere, random position for all points"
+            ),
+            horizontalalignment="center",
+            fontsize=20,
+        )
+    trial_num = ax.text(-1.2, 0.9, "Trial:", fontsize=18)
+    success_rate = ax.text(0, 0.9, "Success rate:", fontsize=20)
+
+    ## Background "boundaries"
+    # Cake outline
+    ax.add_patch(patches.Circle(CENTER, R, linewidth=1, edgecolor="k", facecolor="none"))
+    # ax.add_patch(patches.Circle(CENTER, R*1.07, linewidth=1, edgecolor="r", facecolor="none"))
+    # Candle placement path
+    candle_region_legend = patches.Patch(fill=False, edgecolor="w", label=None)
+    if show_candle_region:
+        if isinstance(radius, float):
+            ax.add_patch(patches.Circle(CENTER, radius, linewidth=20, edgecolor="b", facecolor="none", alpha=0.25))
+        else:
+            ax.add_patch(patches.Circle(CENTER, R, linewidth=1, edgecolor="b", facecolor="b", alpha=0.25))
+        candle_region_legend = patches.Patch(edgecolor="b", linewidth=9, alpha=0.25, fill=False, label="Candle region")
+
+    ## Sim values
+    candle1_plot = ax.plot(sim["candle1"][0, 0], sim["candle1"][0, 1], "b.", markersize=20)[0]
+    candle2_plot = ax.plot(sim["candle2"][0, 0], sim["candle2"][0, 1], "g.", markersize=20)[0]
+    cut_plot = ax.plot(
+        [cut[0, 0], cut[0, 2]],  # [x, x reflected]
+        [cut[0, 1], cut[0, 3]],  # [y, y reflected]
+        linewidth=3,
+        color=SUCCESS_COLOR if sim["success"][0, 0] else FAILURE_COLOR,
+    )[0]
+
+    success_legend = lines.Line2D([], [], color=SUCCESS_COLOR, linewidth=3, label="Success")
+    failure_legend = lines.Line2D([], [], color=FAILURE_COLOR, linewidth=3, label="Failure")
+    ax.legend(
+        handles=[success_legend, failure_legend, candle_region_legend],
+        loc="lower right",
+        fontsize=12,
+        frameon=False,
+        borderpad=0.8,
+    )
 
     ## Construct the animation, using the update function as the animation director.
     animation = FuncAnimation(
@@ -598,7 +626,8 @@ if __name__ == "__main__":
     simulation_animation_cut_anywhere(
         rng_main,
         sim_length_main,
+        radius=R * 0.65,  # comment/remove/make None to behave fully random for candle and cut placement
         show_candle_region=True,
         save_animation=save_animation_main,
-        save_filename=Path("./cake_cutting/result_animations/round_cake_cut_anywhere_fixedrad_candleregion.gif"),
+        save_filename=Path("./cake_cutting/result_animations/round_cake_cut_anywhere.gif"),
     )
