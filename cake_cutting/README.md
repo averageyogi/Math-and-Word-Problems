@@ -8,7 +8,7 @@ Candles split cake into 3 regions, slice chooses one of the regions.
 
 P(slice between candles) = 1/3.
 
-![alt text](.\result_animations\long_cake.gif "Title")
+![long_cake](https://github.com/averageyogi/Math-and-Word-Problems/blob/main/cake_cutting/result_animations/long_cake.gif?raw=true)
 
 ## Round Cake
 
@@ -29,7 +29,7 @@ Slice splits cake in half:
 
 P(one candle is on each half) = 2/4 = 1/2.
 
-![alt text](.\result_animations\round_cake_cut_from_center_candleregion.gif "Title")
+![round_cake_cut_from_center_candleregion](https://github.com/averageyogi/Math-and-Word-Problems/blob/main/cake_cutting/result_animations/round_cake_cut_from_center_candleregion.gif?raw=true)
 
 ---
 In the cut anywhere case, changing radius and center does seem to matter.
@@ -38,8 +38,8 @@ With fixed radius, all points are on a circle. Cut is 2 points on circle, those 
 
 P(cut points are each between candles) = 2/6 = 1/3.
 
-![alt text](.\result_animations\round_cake_cut_anywhere_fixedrad_candleregion.gif "Title")
+![round_cake_cut_anywhere_fixedrad_candleregion](https://github.com/averageyogi/Math-and-Word-Problems/blob/main/cake_cutting/result_animations/round_cake_cut_anywhere_fixedrad_candleregion.gif?raw=true)
 
 With random radius between 0-R, it appears to be around 0.38.
 
-![alt text](.\result_animations\round_cake_cut_anywhere_candleregion.gif "Title")
+![round_cake_cut_anywhere_candleregion](https://github.com/averageyogi/Math-and-Word-Problems/blob/main/cake_cutting/result_animations/round_cake_cut_anywhere_candleregion.gif?raw=true)
