@@ -162,3 +162,5 @@ cython_debug/
 
 # Videos
 *.mp4
+
+aliquot_sequences/sequence_files/
