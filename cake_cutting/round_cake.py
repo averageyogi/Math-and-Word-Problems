@@ -13,7 +13,7 @@ from shapely.geometry import LineString as sLineString, Point as sPoint
 from axline import axline
 
 
-R: float = 1
+R: float = 1.
 CENTER: "tuple[float, float]" = (-0.1, -0.35)
 CUT_DISPLAY_R: float = 0.42
 SUCCESS_COLOR: str = "darkorange"
@@ -25,13 +25,13 @@ def find_quadrant_rect(x: float, y: float) -> Literal[1, 2, 3, 4]:
     x = x - CENTER[0]
     y = y - CENTER[1]
 
-    if x >= 0 and y >= 0:
-        return 1
-    if x < 0 and y >= 0:
-        return 2
-    if x < 0 and y < 0:
-        return 3
-    return 4  # x >= 0 and y < 0
+    if x >= 0:
+        if y >= 0:
+            return 1  # x >= 0 and y >= 0
+        return 4      # x >= 0 and y < 0
+    if y >= 0:
+        return 2      # x < 0 and y >= 0
+    return 3          # x < 0 and y < 0
 
 
 def simple_simulation(rng: np.random.Generator, sim_length: int) -> None:
@@ -609,7 +609,7 @@ def simulation_animation_cut_anywhere(
 
 if __name__ == "__main__":
     rng_main = np.random.default_rng(seed=None)
-    sim_length_main = 500
+    sim_length_main = 50000
     save_animation_main = False
 
     print("The probability a slice will separate the two candles:")
