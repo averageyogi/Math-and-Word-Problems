@@ -1,3 +1,9 @@
+"""
+Cutting a rectangular cake with two candles. Monte Carlo simulations.
+
+Numberphile - Two Candles, One Cake - https://www.youtube.com/watch?v=FkVe8qrT0LA
+"""
+
 import os
 from functools import partial
 from pathlib import Path

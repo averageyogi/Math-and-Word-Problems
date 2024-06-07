@@ -1,3 +1,10 @@
+"""
+Cutting a round cake with two candles. Monte Carlo simulations.
+
+Numberphile - Two Candles, One Cake (Part 2) - https://www.youtube.com/watch?v=l5gUrDg01cQ
+SparksMaths - The Cake and Candles - Geogebra Build as used on Numberphile - https://www.youtube.com/watch?v=0eqBG6lz2mE
+"""
+
 import os
 from functools import partial
 from pathlib import Path
