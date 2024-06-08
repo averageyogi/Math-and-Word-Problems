@@ -40,7 +40,12 @@ P(one candle is on each half) = 2/4 = 1/2.
 ---
 In the cut anywhere case, changing radius and center does seem to matter.
 
-With fixed radius, all points are on a circle. Cut is 2 points on circle, those points can either be together between the candles (2 options (4 bi-directionally)), or have one candle in between each cut point (1 option (2 bi-directionally)).
+With fixed radius, all points are on a circle. Cut is 2 points on circle, those points can either be together between
+the candles (2 options (4 bi-directionally)), or have one candle in between each cut point
+(1 option (2 bi-directionally)).
+
+This is equivalent to the long cake case. The first point of the cut simulates the ends of the long cake, then the
+second point of the cut is the single cut point in the long cake case. As if you curled the long cake into a ring.
 
 P(cut points are each between candles) = 2/6 = 1/3.
 
