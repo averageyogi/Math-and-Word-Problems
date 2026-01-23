@@ -22,7 +22,7 @@ from statistics import mean
 from time import perf_counter
 
 
-# MARK: Recursive
+#MARK: Recursive
 def fibonacci_recursive(n: int) -> int:
     """
     Recursive implementation to generate F_n, the n-th Fibonacci number,
@@ -52,7 +52,7 @@ def fibonacci_recursive(n: int) -> int:
     # return fib_list[-1]
 
 
-# MARK: RecursiveList (w)
+#MARK: RecursiveList (w)
 def fibonacci_recursive_list_wasteful(n: int) -> list[int]:
     """
     Recursive implementation to generate the Fibonacci sequence up to F_n,
@@ -67,7 +67,7 @@ def fibonacci_recursive_list_wasteful(n: int) -> list[int]:
     return [fibonacci_recursive(i) for i in range(n + 1)]
 
 
-# MARK: Recursive List
+#MARK: Recursive List
 def fibonacci_recursive_list(n: int) -> list[int]:
     """
     Recursive implementation to generate the Fibonacci sequence upto F_n,
@@ -91,7 +91,7 @@ def fibonacci_recursive_list(n: int) -> list[int]:
     return fib_list
 
 
-# MARK: Iterative
+#MARK: Iterative
 def fibonacci_iterative(n: int) -> int:
     """
     Iterative implementation to generate F_n, the n-th Fibonacci number,
@@ -119,7 +119,7 @@ def fibonacci_iterative(n: int) -> int:
     return n1
 
 
-# MARK: Iterative List
+#MARK: Iterative List
 def fibonacci_iterative_list(n: int) -> list[int]:
     """
     Iterative implementation to generate the Fibonacci sequence upto F_n,
@@ -144,7 +144,7 @@ def fibonacci_iterative_list(n: int) -> list[int]:
     return fib_list
 
 
-# MARK: List Indexing
+#MARK: List Indexing
 def fibonacci_list_indexing(n: int) -> list[int]:
     """
     Iterative list indexing implementation to generate the Fibonacci sequence up to F_n,
@@ -173,7 +173,7 @@ def fibonacci_list_indexing(n: int) -> list[int]:
     return fib_list
 
 
-# MARK: Generator Yield
+#MARK: Generator Yield
 def fibonacci_yield(n: int) -> list[int]:
     """
     Generator implementation to generate the Fibonacci sequence up to F_n,
@@ -208,6 +208,7 @@ def fibonacci_yield(n: int) -> list[int]:
     return fib_list
 
 
+#MARK: Benchmark
 def benchmark(n: int = 40):
     """
     Time benchmarking for Fibonacci sequence functions.
